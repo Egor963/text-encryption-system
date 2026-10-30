@@ -1,0 +1,11 @@
+{
+  "name": "text-encryption-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Учебное веб-приложение с шифрами Цезаря, Виженера и XOR",
+  "scripts": {
+    "start": "node main.js",
+    "test": "node test.js"
+  },
+  "license": "MIT"
+}

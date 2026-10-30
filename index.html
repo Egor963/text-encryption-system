@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Система шифрования текста</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      margin-bottom: 0.4rem;
+      color: #38bdf8;
+    }
+    .subtitle {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+    .tab-btn {
+      padding: 0.5rem 1.4rem;
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: #94a3b8;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all .2s;
+    }
+    .tab-btn.active {
+      background: #0284c7;
+      border-color: #0284c7;
+      color: #fff;
+    }
+    .panel {
+      display: none;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .panel.active { display: block; }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    label { display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.4rem; }
+    textarea, input {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #e2e8f0;
+      border-radius: 6px;
+      padding: 0.65rem 0.8rem;
+      font-family: 'Consolas', monospace;
+      font-size: 0.9rem;
+      resize: vertical;
+      outline: none;
+      transition: border-color .2s;
+    }
+    textarea:focus, input:focus { border-color: #38bdf8; }
+    textarea { min-height: 90px; }
+    .row { display: flex; gap: 1rem; margin-bottom: 1rem; }
+    .row > div { flex: 1; }
+    .actions { display: flex; gap: 0.6rem; margin: 0.8rem 0; }
+    button {
+      padding: 0.55rem 1.3rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: opacity .2s;
+    }
+    button:hover { opacity: 0.85; }
+    .btn-encrypt { background: #0284c7; color: #fff; }
+    .btn-decrypt { background: #059669; color: #fff; }
+    .btn-clear   { background: #334155; color: #94a3b8; }
+    .result-box {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 0.75rem;
+      min-height: 60px;
+      font-family: 'Consolas', monospace;
+      font-size: 0.9rem;
+      word-break: break-all;
+      color: #4ade80;
+    }
+    .error { color: #f87171; }
+    .algo-info {
+      background: #0f172a;
+      border-left: 3px solid #0284c7;
+      padding: 0.6rem 0.9rem;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.82rem;
+      color: #94a3b8;
+      margin-bottom: 1.2rem;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🔐 Система шифрования текста</h1>
+<p class="subtitle">Шифр Цезаря · Шифр Виженера · XOR-шифр — JavaScript</p>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('caesar')">Шифр Цезаря</button>
+  <button class="tab-btn" onclick="switchTab('vigenere')">Шифр Виженера</button>
+  <button class="tab-btn" onclick="switchTab('xor')">XOR-шифр</button>
+</div>
+
+<!-- ═══════════ ЦЕЗАРЬ ═══════════ -->
+<div id="panel-caesar" class="panel active">
+  <div class="card">
+    <div class="algo-info">
+      <strong>Шифр Цезаря</strong> — моноалфавитный шифр подстановки.
+      Каждая буква алфавита заменяется буквой, стоящей на <em>N</em> позиций
+      дальше (или ближе) в алфавите. Буквы за пределами алфавита переносятся
+      циклически. Небуквенные символы не изменяются.
+    </div>
+    <label>Исходный текст</label>
+    <textarea id="c-input" placeholder="Введите текст для шифрования..."></textarea>
+    <div class="row" style="margin-top:0.8rem;">
+      <div>
+        <label>Сдвиг (0 – 25)</label>
+        <input type="number" id="c-shift" value="13" min="0" max="25">
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn-encrypt" onclick="caesarRun('encrypt')">Зашифровать</button>
+      <button class="btn-decrypt" onclick="caesarRun('decrypt')">Расшифровать</button>
+      <button class="btn-clear"   onclick="clearPanel('c')">Очистить</button>
+    </div>
+    <label>Результат</label>
+    <div class="result-box" id="c-result"></div>
+  </div>
+</div>
+
+<!-- ═══════════ ВИЖЕНЕР ═══════════ -->
+<div id="panel-vigenere" class="panel">
+  <div class="card">
+    <div class="algo-info">
+      <strong>Шифр Виженера</strong> — полиалфавитный шифр. Использует
+      ключевое слово: каждая буква ключа задаёт величину сдвига для
+      соответствующей буквы текста. Ключ повторяется циклически.
+      Небуквенные символы пропускаются без изменений.
+    </div>
+    <label>Исходный текст</label>
+    <textarea id="v-input" placeholder="Введите текст для шифрования..."></textarea>
+    <div class="row" style="margin-top:0.8rem;">
+      <div>
+        <label>Ключевое слово (только буквы)</label>
+        <input type="text" id="v-key" value="SECRET" placeholder="SECRET">
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn-encrypt" onclick="vigenereRun('encrypt')">Зашифровать</button>
+      <button class="btn-decrypt" onclick="vigenereRun('decrypt')">Расшифровать</button>
+      <button class="btn-clear"   onclick="clearPanel('v')">Очистить</button>
+    </div>
+    <label>Результат</label>
+    <div class="result-box" id="v-result"></div>
+  </div>
+</div>
+
+<!-- ═══════════ XOR ═══════════ -->
+<div id="panel-xor" class="panel">
+  <div class="card">
+    <div class="algo-info">
+      <strong>XOR-шифр</strong> — симметричный шифр. Каждый символ текста
+      обрабатывается операцией «исключающее ИЛИ» с соответствующим символом
+      ключа (ключ повторяется циклически). Результат кодируется в Base64
+      для удобного отображения и хранения. Применение алгоритма дважды
+      восстанавливает исходный текст.
+    </div>
+    <label>Исходный текст (для шифрования) / Base64 (для расшифрования)</label>
+    <textarea id="x-input" placeholder="Текст или Base64-строка..."></textarea>
+    <div class="row" style="margin-top:0.8rem;">
+      <div>
+        <label>Ключ (любые символы)</label>
+        <input type="text" id="x-key" value="myKey123" placeholder="myKey123">
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn-encrypt" onclick="xorRun('encrypt')">Зашифровать → Base64</button>
+      <button class="btn-decrypt" onclick="xorRun('decrypt')">Расшифровать ← Base64</button>
+      <button class="btn-clear"   onclick="clearPanel('x')">Очистить</button>
+    </div>
+    <label>Результат</label>
+    <div class="result-box" id="x-result"></div>
+  </div>
+</div>
+
+<script>
+// ─── Переключение вкладок ─────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function clearPanel(prefix) {
+  document.getElementById(prefix + '-input').value  = '';
+  document.getElementById(prefix + '-result').textContent = '';
+  document.getElementById(prefix + '-result').className = 'result-box';
+}
+
+function showResult(id, text, isError = false) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'result-box' + (isError ? ' error' : '');
+}
+
+// ─── Шифр Цезаря ─────────────────────────────────────────────────────────────
+function caesarShift(text, shift, decrypt) {
+  shift = ((shift % 26) + 26) % 26;
+  if (decrypt) shift = (26 - shift) % 26;
+  return text.split('').map(ch => {
+    if (ch >= 'A' && ch <= 'Z') return String.fromCharCode(((ch.charCodeAt(0) - 65 + shift) % 26) + 65);
+    if (ch >= 'a' && ch <= 'z') return String.fromCharCode(((ch.charCodeAt(0) - 97 + shift) % 26) + 97);
+    return ch;
+  }).join('');
+}
+
+function caesarRun(mode) {
+  const text  = document.getElementById('c-input').value;
+  const shift = parseInt(document.getElementById('c-shift').value, 10);
+  if (!text) return showResult('c-result', 'Введите текст.', true);
+  if (isNaN(shift) || shift < 0 || shift > 25) return showResult('c-result', 'Сдвиг должен быть числом от 0 до 25.', true);
+  showResult('c-result', caesarShift(text, shift, mode === 'decrypt'));
+}
+
+// ─── Шифр Виженера ───────────────────────────────────────────────────────────
+function vigenereProcess(text, key, decrypt) {
+  const k = key.toUpperCase().replace(/[^A-Z]/g, '');
+  if (!k) throw new Error('Ключ должен содержать хотя бы одну букву.');
+  let ki = 0;
+  return text.split('').map(ch => {
+    let base = null;
+    if (ch >= 'A' && ch <= 'Z') base = 65;
+    else if (ch >= 'a' && ch <= 'z') base = 97;
+    if (base === null) return ch;
+    const shift = k.charCodeAt(ki++ % k.length) - 65;
+    const s = decrypt ? (26 - shift) : shift;
+    return String.fromCharCode(((ch.charCodeAt(0) - base + s) % 26) + base);
+  }).join('');
+}
+
+function vigenereRun(mode) {
+  const text = document.getElementById('v-input').value;
+  const key  = document.getElementById('v-key').value;
+  if (!text) return showResult('v-result', 'Введите текст.', true);
+  try {
+    showResult('v-result', vigenereProcess(text, key, mode === 'decrypt'));
+  } catch (e) {
+    showResult('v-result', e.message, true);
+  }
+}
+
+// ─── XOR-шифр ────────────────────────────────────────────────────────────────
+function xorRun(mode) {
+  const text = document.getElementById('x-input').value;
+  const key  = document.getElementById('x-key').value;
+  if (!text) return showResult('x-result', 'Введите текст.', true);
+  if (!key)  return showResult('x-result', 'Ключ не может быть пустым.', true);
+  try {
+    if (mode === 'encrypt') {
+      const raw = text.split('').map((ch, i) =>
+        String.fromCharCode(ch.charCodeAt(0) ^ key.charCodeAt(i % key.length))
+      ).join('');
+      showResult('x-result', btoa(unescape(encodeURIComponent(raw))));
+    } else {
+      const raw = decodeURIComponent(escape(atob(text)));
+      showResult('x-result', raw.split('').map((ch, i) =>
+        String.fromCharCode(ch.charCodeAt(0) ^ key.charCodeAt(i % key.length))
+      ).join(''));
+    }
+  } catch (e) {
+    showResult('x-result', 'Ошибка: проверьте формат входных данных (' + e.message + ')', true);
+  }
+}
+</script>
+</body>
+</html>
